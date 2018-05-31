@@ -4,7 +4,7 @@
  Author      : Pasquale Settembre
  Version     :
  Copyright   : Your copyright notice
- Description : Hello MPI World in C 
+ Description : Hello MPI World in C
  ============================================================================
  */
 #include <math.h>
@@ -16,7 +16,7 @@
 
 typedef struct { 				//STRUTTURA BODY
 	float x, y, z, vx, vy, vz;  //x, y, z sono le posizioni nello spazio 3D;
-	//vx, vy, vz sono le velocità sulle cordinate x,y e z
+								//vx, vy, vz sono le velocità sulle cordinate x,y e z
 } Body;
 
 //Calcolo dei valori dei bodies in maniera casuale
@@ -71,18 +71,18 @@ int main(int argc, char* argv[]){
 	int tag=0;    /* tag for messages */
 	MPI_Status status ;   /* return status for receive */
 
-	/* start up MPI */
+	int resto;
+	int *startRange;
+	int nBodies = 50;      //numero body
 
+	/* start up MPI */
 	MPI_Init(&argc, &argv);
 
 	/* find out process rank */
-	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank); 
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
 	/* find out number of processes */
 	MPI_Comm_size(MPI_COMM_WORLD, &nproc);
-
-
-	int nBodies = 50;      //numero body
 
 	if (argc > 1)
 		nBodies = atoi(argv[1]);
@@ -92,6 +92,7 @@ int main(int argc, char* argv[]){
 	int portion;
 	int bytes = nBodies*sizeof(Body);             //Allocazione numero di byte in base alla dimensione di Body
 	float *buf = (float*)malloc(bytes);			  //Allocazione array buffer di puntatori con il numero di byte dei body
+	startRange = malloc (sizeof(int)*nproc);
 
 	const int numitem=6;
 	int blocklen[6] = {1,1,1,1,1,1};
@@ -106,18 +107,25 @@ int main(int argc, char* argv[]){
 	displ[4] = offsetof(Body, vy);
 	displ[5] = offsetof(Body, vz);
 
-
 	MPI_Type_create_struct(numitem, blocklen, displ, types, &body_type);
 	MPI_Type_commit(&body_type);
 
 	Body *p = (Body*)buf;					      //Puntatore ad un elemento Body che contiene l'array buf
+
 
 	if(my_rank == 0){
 		printf("MASTER rank %d \n",my_rank);
 
 		randomizeBodies(buf, 6*nBodies); // Init pos / vel data  (calcolo dei valori dei bodies)
 
+		resto = nBodies % nproc;
 		portion = nBodies/(nproc-1);
+
+		for(int i = 0; i < nproc; i++){
+
+		}
+
+
 
 		//CALCOLO DELLE POSIZIONI x,y,z dei bodies IL MASTER DEVE CALCOLARE LE POSIZIONI
 		for (int i = 0 ; i < nBodies; i++) { // integrate position
@@ -133,49 +141,15 @@ int main(int argc, char* argv[]){
 		for(int i=0; i < nBodies; i++){
 			printf("BODY n: %d %0.3f %0.3f %0.3f %0.3f \n",i,p[i].x,p[i].y,p[i].z,p[i].vx);
 		}
-		free(buf);
 	}
 	else{
 
-		for (int iter = 1; iter <= nIters; iter++) {              //INIZIO SIMULAZIONE
 
-			//bodyForce(p, dt, nBodies); // compute interbody forces (calcolo delle forze)
-			//viene passato il body, il tempo trascorso e il numBody
-
-			for (int i = 0; i < nBodies; i++) {          //Per ogni body
-
-				float Fx = 0.0f;				   //Si inizializza a 0 la forza su x,y e z
-				float Fy = 0.0f;
-				float Fz = 0.0f;
-
-				for (int j = 0; j < nBodies; j++) {      //Calcolo della distanza da un determinato body verso tutti gli altri
-
-					/*CALCOLO DISTANZA su x,y e z (si calcola prendendo la posizione x, y, z di un altro body
-					 * 									-
-															la posizione x, y, z del body corrente)*/
-					float dx = p[j].x - p[i].x;
-					float dy = p[j].y - p[i].y;
-					float dz = p[j].z - p[i].z;
-
-					float distSqr = dx*dx + dy*dy + dz*dz + SOFTENING;  //Calcolo distanza totale da un body
-					float invDist = 1.0f / sqrtf(distSqr);          //Calcolo dell'inversa della distanza
-					float invDist3 = invDist * invDist * invDist;   //L'inversa si moltiplica per 3, perché è uno spazio a 3 dimensioni
-
-					Fx += dx * invDist3;   //Calcola la forza su x come, distanza di x * l'inverso della distanza
-					Fy += dy * invDist3;
-					Fz += dz * invDist3;
-				}
-				//CALCOLO VELOCITÀ SU x,y,z
-				p[i].vx += dt*Fx;
-				p[i].vy += dt*Fy;
-				p[i].vz += dt*Fz;
-			}
-
-		}
-
-		/* shut down MPI */
-		MPI_Finalize();
-
-		return 0;
 	}
+	/* shut down MPI */
+	MPI_Finalize();
+	free(buf);
+
+	return 0;
 }
+
