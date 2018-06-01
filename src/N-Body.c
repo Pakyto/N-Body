@@ -30,16 +30,16 @@ void randomizeBodies(float *data, int n) {  //La funzione prende in input un arr
 }
 
 //Calcolo della forza di un body
-void bodyForce(Body *p, float dt, int n, int startRange) {       //Prende in input un body, il tempo trascorso e il numero di body
+void bodyForce(Body *p, float dt, int n, int startRange, int numBodies) {       //Prende in input un body, il tempo trascorso e il numero di body
 	printf("FUNZIONE bodyForce COUNTSEND: %d  STARTRANGE: %d \n",n,startRange);
 
-	for (int i = startRange; i < n; i++) {          //Per ogni body
+	for (int i = startRange; i < startRange + n; i++) {          //Per ogni body
 
 		float Fx = 0.0f;				   //Si inizializza a 0 la forza su x,y e z
 		float Fy = 0.0f;
 		float Fz = 0.0f;
 
-		for (int j = 0; j < n; j++) {      //Calcolo della distanza da un determinato body verso tutti gli altri
+		for (int j = 0; j < numBodies; j++) {      //Calcolo della distanza da un determinato body verso tutti gli altri
 
 			/*CALCOLO DISTANZA su x,y e z (si calcola prendendo la posizione x, y, z di un altro body
 			 * 									-
@@ -60,7 +60,8 @@ void bodyForce(Body *p, float dt, int n, int startRange) {       //Prende in inp
 		p[i].vx += dt*Fx;
 		p[i].vy += dt*Fy;
 		p[i].vz += dt*Fz;
-		printf("USCITA bodyForce \n");
+		printf("USCITA bodyForce %0.3f %0.3f %0.3f \n",p[i].vx,p[i].vy,p[i].vz);
+
 	}
 	//QUESTA FASE DEVE ESSERE PARALLELIZZATA CON MPI
 }
@@ -73,13 +74,8 @@ int main(int argc, char* argv[]){
 	int resto;
 	int *startRange;
 	int *countSend;
-	int nBodies = 50;      //numero body
-
-	const float dt = 0.01f; // time step (conteggia il tempo trascorso)
-	const int nIters = 4;  // simulation iterations
 	int portion;
-	int count = 0;
-
+	double startTime,endTime;
 
 	/* start up MPI */
 	MPI_Init(&argc, &argv);
@@ -89,6 +85,11 @@ int main(int argc, char* argv[]){
 
 	/* find out number of processes */
 	MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+
+	int nBodies = 50;      //numero body
+	const float dt = 0.01f; // time step (conteggia il tempo trascorso)
+	const int nIters = 5;  // simulation iterations
+	int count = 0;
 
 	if (argc > 1)
 		nBodies = atoi(argv[1]);
@@ -142,7 +143,7 @@ int main(int argc, char* argv[]){
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
-		printf("DOPO BARRIERA \n");
+	printf("DOPO BARRIERA \n");
 
 	float recvbuf[countSend[my_rank]];
 
@@ -157,10 +158,6 @@ int main(int argc, char* argv[]){
 	//MPI_Scatterv(&buf,countSend,startRange,MPI_FLOAT,&recvbuf,countSend[my_rank],MPI_FLOAT,0,MPI_COMM_WORLD);
 	printf("dopo SCATTER \n");
 
-	/*if(my_rank == 0){
-		free(p);
-		free(buf);
-	}*/
 
 	for (int i = 0; i < countSend[my_rank]; i++) {
 		printf("RANK %d BUFFF %f \n",my_rank, recvbuf[i]);
@@ -168,29 +165,46 @@ int main(int argc, char* argv[]){
 
 	printf("\n");
 
+
+	startTime = MPI_Wtime();
+
 	for (int iter = 1; iter <= nIters; iter++) {              //INIZIO SIMULAZIONE
 
 		printf("PROCESSOR %d \n",my_rank);
-		bodyForce(p,dt,countSend[my_rank],startRange[my_rank]);
+		bodyForce(p,dt,countSend[my_rank],startRange[my_rank],nBodies);
 
-	}
 
-	/*
-	if(my_rank == 0){
-		for(int i=0; i < nBodies; i++){
-			printf("BODY n: %d %0.3f %0.3f %0.3f %0.3f \n",i,p[i].x,p[i].y,p[i].z,p[i].vx);
+		/*
+		//CALCOLO DELLE POSIZIONI x,y,z dei bodies
+		for (int i = 0 ; i < nBodies; i++) { // integrate position
+			//Si calcola, velocità su x per dt(tempo trascorso) e il risultato viene sommato alla posizione x
+			p[i].x += p[i].vx*dt;
+			p[i].y += p[i].vy*dt;
+			p[i].z += p[i].vz*dt;
 		}
+		*/
 	}
-	 */
+	endTime = MPI_Wtime();
 
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	printf("DOPO BARRIERA \n");
+
+	if(my_rank == 0){
+		printf("\nTEMPO TRASCORSO %f \n",endTime - startTime);
+		/*for(int i=0; i < nBodies; i++){
+			printf("BODY n: %d %0.3f %0.3f %0.3f %0.3f \n",i,p[i].x,p[i].y,p[i].z,p[i].vx);
+		}*/
+
+	}
 
 
 
 	/* shut down MPI */
-	MPI_Finalize();
 	free(buf);
 	free(countSend);
 	free(startRange);
+	MPI_Finalize();
 
 	return 0;
 }
