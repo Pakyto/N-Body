@@ -16,7 +16,7 @@
 
 typedef struct { 				//STRUTTURA BODY
 	float x, y, z, vx, vy, vz;  //x, y, z sono le posizioni nello spazio 3D;
-								//vx, vy, vz sono le velocità sulle cordinate x,y e z
+	//vx, vy, vz sono le velocità sulle cordinate x,y e z
 } Body;
 
 //Calcolo dei valori dei bodies in maniera casuale
@@ -30,16 +30,17 @@ void randomizeBodies(float *data, int n) {  //La funzione prende in input un arr
 }
 
 //Calcolo della forza di un body
-void bodyForce(Body *p, float dt, int n, int startRange, int numBodies) {       //Prende in input un body, il tempo trascorso e il numero di body
+void bodyForce(Body *p, float dt, int n, int startRange, int numBodies,MPI_Datatype body_type) {       //Prende in input un body, il tempo trascorso e il numero di body
 	printf("FUNZIONE bodyForce COUNTSEND: %d  STARTRANGE: %d \n",n,startRange);
 
-	for (int i = startRange; i < startRange + n; i++) {          //Per ogni body
+
+	for (int i = 0; i < startRange + n; i++) {          //Per ogni body
 
 		float Fx = 0.0f;				   //Si inizializza a 0 la forza su x,y e z
 		float Fy = 0.0f;
 		float Fz = 0.0f;
 
-		for (int j = 0; j < numBodies; j++) {      //Calcolo della distanza da un determinato body verso tutti gli altri
+		for (int j = 0; j < startRange + n; j++) {      //Calcolo della distanza da un determinato body verso tutti gli altri
 
 			/*CALCOLO DISTANZA su x,y e z (si calcola prendendo la posizione x, y, z di un altro body
 			 * 									-
@@ -60,9 +61,12 @@ void bodyForce(Body *p, float dt, int n, int startRange, int numBodies) {       
 		p[i].vx += dt*Fx;
 		p[i].vy += dt*Fy;
 		p[i].vz += dt*Fz;
-		printf("USCITA bodyForce %0.3f %0.3f %0.3f \n",p[i].vx,p[i].vy,p[i].vz);
 
+		printf("USCITA bodyForce %0.3f %0.3f %0.3f \n",p[i].vx,p[i].vy,p[i].vz);
 	}
+	//MPI_Allgather(p,sizeof(*p),body_type,p,sizeof(*p),body_type,MPI_COMM_WORLD);
+
+
 	//QUESTA FASE DEVE ESSERE PARALLELIZZATA CON MPI
 }
 
@@ -76,6 +80,8 @@ int main(int argc, char* argv[]){
 	int *countSend;
 	int portion;
 	double startTime,endTime;
+	int bytes;
+	float *buf;
 
 	/* start up MPI */
 	MPI_Init(&argc, &argv);
@@ -94,8 +100,10 @@ int main(int argc, char* argv[]){
 	if (argc > 1)
 		nBodies = atoi(argv[1]);
 
-	int bytes = nBodies*sizeof(Body);             //Allocazione numero di byte in base alla dimensione di Body
-	float *buf = (float*)malloc(bytes);			  //Allocazione array buffer di puntatori con il numero di byte dei body
+
+	bytes = nBodies*sizeof(Body);             //Allocazione numero di byte in base alla dimensione di Body
+	buf = (float*)malloc(sizeof(int)*bytes);			  //Allocazione array buffer di puntatori con il numero di byte dei body
+
 
 	countSend = malloc (sizeof(int)*nproc);
 	startRange = malloc (sizeof(int)*nproc);
@@ -143,61 +151,109 @@ int main(int argc, char* argv[]){
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
-	printf("DOPO BARRIERA \n");
+	//printf("DOPO BARRIERA \n");
 
-	float recvbuf[countSend[my_rank]];
+	float *recvbuf = (float*)malloc(sizeof(int)*bytes);
+
+	//float recvbuf[countSend[my_rank]];                   //Buffer con il numero di elementi assegnato ad ogni proccesso
 
 	if(my_rank == 0){
 		randomizeBodies(buf, 6*nBodies); // Init pos / vel data  (calcolo dei valori dei bodies)
 	}
 
+	/*
+	printf("PRIMA BCAST \n");
+	for (int i = 0; i < countSend[my_rank]; i++) {
+		printf("RANK %d BODIES %0.3f %0.3f %0.3f  \n",my_rank, p[i].x, p[i].y, p[i].z);
+	}
+	*/
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	printf("BARRIER PRIMA BCAST \n");
+	MPI_Bcast(buf,bytes,MPI_FLOAT,0,MPI_COMM_WORLD);
+
+	/*
+	printf("DOPO BCAST \n");
+	for (int i = 0; i < countSend[my_rank]; i++) {
+		printf("RANK %d BODIES %0.3f %0.3f %0.3f  \n",my_rank, p[i].x, p[i].y, p[i].z);
+	}
+
+
+	for(int i=0; i<countSend[my_rank]; i++){
+		printf("RANK %d BUFF %0.3f \n",my_rank, buf[i]);
+	}
+	*/
+	MPI_Barrier(MPI_COMM_WORLD);
+
+
 	printf("PRIMA SCATTER \n");
 
+
 	MPI_Scatterv(buf,countSend,startRange,MPI_FLOAT,recvbuf,countSend[my_rank],MPI_FLOAT,0,MPI_COMM_WORLD);
+
+	//MPI_Scatterv(&p,countSend,startRange,body_type,&bodies,countSend[my_rank],body_type,0,MPI_COMM_WORLD);
 
 	//MPI_Scatterv(&buf,countSend,startRange,MPI_FLOAT,&recvbuf,countSend[my_rank],MPI_FLOAT,0,MPI_COMM_WORLD);
 	printf("dopo SCATTER \n");
 
 
+	//Body *p = (Body*)recvbuf;
+
 	for (int i = 0; i < countSend[my_rank]; i++) {
-		printf("RANK %d BUFFF %f \n",my_rank, recvbuf[i]);
+		printf("RANK %d BUFFF %0.3f \n",my_rank, recvbuf[i]);
+	}
+
+
+	for (int i = 0; i < startRange[my_rank]+countSend[my_rank]; i++) {
+			printf("RANK %d BODIES %0.3f %0.3f %0.3f  \n",my_rank, p[i].x, p[i].y, p[i].z);
 	}
 
 	printf("\n");
 
+	MPI_Barrier(MPI_COMM_WORLD);
+
 
 	startTime = MPI_Wtime();
 
+
 	for (int iter = 1; iter <= nIters; iter++) {              //INIZIO SIMULAZIONE
 
-		printf("PROCESSOR %d \n",my_rank);
-		bodyForce(p,dt,countSend[my_rank],startRange[my_rank],nBodies);
+		printf("ITER %d PROCESSOR %d \n",iter,my_rank);
+		bodyForce(p,dt,countSend[my_rank],startRange[my_rank],nBodies,body_type);
 
 
-		/*
+		//MPI_Allgather(p,sizeof(*p),body_type,p,sizeof(*p),body_type,MPI_COMM_WORLD);
+		//printf("DOPO ALLGATHER \n");
+
 		//CALCOLO DELLE POSIZIONI x,y,z dei bodies
-		for (int i = 0 ; i < nBodies; i++) { // integrate position
+		for (int i = 0 ; i < startRange[my_rank] + countSend[my_rank]; i++) { // integrate position
 			//Si calcola, velocità su x per dt(tempo trascorso) e il risultato viene sommato alla posizione x
 			p[i].x += p[i].vx*dt;
 			p[i].y += p[i].vy*dt;
 			p[i].z += p[i].vz*dt;
 		}
-		*/
+
+		MPI_Allgather(MPI_IN_PLACE,countSend[my_rank],body_type,p,countSend[my_rank],body_type,MPI_COMM_WORLD);
+
+
 	}
-	endTime = MPI_Wtime();
+
 
 
 	MPI_Barrier(MPI_COMM_WORLD);
-	printf("DOPO BARRIERA \n");
+	//printf("DOPO BARRIERA \n");
+
+	endTime = MPI_Wtime();
+
+
 
 	if(my_rank == 0){
 		printf("\nTEMPO TRASCORSO %f \n",endTime - startTime);
-		/*for(int i=0; i < nBodies; i++){
-			printf("BODY n: %d %0.3f %0.3f %0.3f %0.3f \n",i,p[i].x,p[i].y,p[i].z,p[i].vx);
-		}*/
+		for(int i=0; i < nBodies; i++){
+			printf("BODY n: %d X:%0.3f Y:%0.3f Z:%0.3f VX:%0.3f VY:%0.3f VZ:%0.3f \n",i,p[i].x,p[i].y,p[i].z,p[i].vx,p[i].vy,p[i].vz);
+		}
 
 	}
-
 
 
 	/* shut down MPI */
