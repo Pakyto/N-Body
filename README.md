@@ -55,11 +55,11 @@ L'n-body solver sviluppato, è in grado di distribuire in maniera equa ai vari p
 
 
 
-##### Algoritmo:
+##### ALGORITMO:
 
 L'algoritmo per il calcolo dei valori delle particelle da parte dei processori, è diviso in diverse fasi:
 
-**AVVIO MPI**
+**Avvio MPI**
 
 Viene avviato MPI e vengono presi i parametri passati da linea di comando
 
@@ -78,7 +78,7 @@ const int nIters = atoi(argv[2]); //numero iterazioni
 
 
 
-**ALLOCAZIONE ARRAY**
+**Allocazione array**
 
 - Allocazione dell'array dei valori delle particelle con il numero di particelle fornito in input 
 - Allocazione degli array countSend e startRange con il numero di processori fornito in input
@@ -92,7 +92,7 @@ startRange = malloc (sizeof(int)*nproc);
 
 
 
-**CREAZIONE DATATYPE**
+**Creazione datatype**
 
 C'è stata la necessità della creazione di un Datatype poiché tale struttura deve essere trasferita a tutti i processori attraverso MPI, quindi è stato definito il layout del Datatype contenente i campi per la struttura Body. 
 
@@ -114,7 +114,7 @@ MPI_Type_commit(&myStruct);
 
 
 
-**CALCOLO PORZIONE PER OGNI PROCESSORE**
+**Calcolo della porzione delle particelle**
 
 Inizialmente viene prima calcolato il resto e la porzione da assegnare ad ogni processore
 
@@ -143,9 +143,9 @@ for(int i = 0; i < nproc; i++){
 
 
 
-**INIZIALIZZAZIONE PARTICELLE**
+**Inizializzazione particelle**
 
-Il processo MASTER inizializza in maniera casuale la posizione e la velocità di ogni particella. Attraverso la funzione ***MPI_Bcast***, comunica a tutti i processori i valori delle particelle 
+Il processore MASTER inizializza in maniera casuale la posizione e la velocità di ogni particella. Attraverso la funzione ***MPI_Bcast***, comunica a tutti i processori i valori delle particelle 
 
 ```c
 if(my_rank == 0){					
@@ -166,7 +166,7 @@ void randomizeBodies(float *data, int n) {
 
 
 
-**SIMULAZIONE**
+**Simulazione**
 
 Prima di iniziare la simulazione, ogni processore ha un puntatore di tipo Body che punta all'array dei valori delle particelle conosce i valori di tutte le particelle, in questo modo tutti processori conoscono tutti i valori delle particelle
 `Body *p = (Body*)buf;	 `
@@ -207,7 +207,7 @@ for (int i = startRange[my_rank] ; i < startRange[my_rank] + countSend[my_rank];
 }
 ```
 
-**Comunicazione tra i processori**: dato che ogni processore ha bisogno della posizione e della velocità di ogni particella, è stata utilizzata la funzione *MPI_Allgatherv* che permette ad ogni processore di ricevere le porzioni di particelle calcolate dagli altri processori, e inviare la porzione di particelle calcolate dall'i-esimo processore a tutti gli altri processori. In questo modo ogni processore avrà i valori di tutte le particelle calcolate dai vari processori
+**Comunicazione tra i processori**: dato che ogni processore ha bisogno della posizione e della velocità di ogni particella, è stata utilizzata la funzione *MPI_Allgatherv* che permette ad ogni processore di ricevere le porzioni di particelle calcolate dagli altri processori, e inviare la porzione di particelle calcolate dall'i-esimo processore a tutti gli altri processori. In questo modo ogni processore avrà i valori di tutte le particelle calcolate dai vari processori. 
 
 ```c
 	MPI_Allgatherv(MPI_IN_PLACE,0,myStruct,p,countSend,startRange,myStruct,MPI_COMM_WORLD);
@@ -215,4 +215,32 @@ for (int i = startRange[my_rank] ; i < startRange[my_rank] + countSend[my_rank];
 
 La funzione Allgatherv prende come parametri:
 
-- *MPI_IN_PLACE* : in questo caso viene utilizzata questa variabile poiché il buffer di input è lo stesso di quello di output
+- *MPI_IN_PLACE* : in questo caso viene utilizzata questa variabile poiché il buffer di input è lo stesso di quello di output; ogni processore inserisce i valori delle particelle calcolate nel buffer di ricezione
+- *myStruct*: rappresenta il datatype creato per la struttura Body
+- *p*: rappresenta il buffer di ricezione dove verranno memorizzati valori delle particelle di ogni processore
+- *countSend:* rappresenta la porzione di particelle di ogni processore, indica quante particelle ci sono nel buffer di ricezione per ogni processore
+- *startRange*: rappresenta la posizione, all'interno del buffer di ricezione, delle particelle per ogni processore
+
+Una volta eseguita la Allgatherv, il passo di simulazione termina e i processori rieseguono un nuovo passo di simulazione.
+
+**Stampa dei valori finali delle particelle**
+
+Una volta terminati tutti i passi di simulazione, attraverso l'utilizzo della funzione MPI_Barrier si assicura che tutti i processori terminino la computazione. Il processore MASTER stampa le velocità e le posizioni finali di tutte le particelle e il tempo totale di computazione dei valori delle particelle all'interno della simulazione
+
+```c
+if(my_rank == 0){
+		for(int i=0; i < nBodies; i++){
+			printf("BODY n: %d X:%0.3f Y:%0.3f Z:%0.3f VX:%0.3f VY:%0.3f VZ:%0.3f \n",i,p[i].x,p[i].y,p[i].z,p[i].vx,p[i].vy,p[i].vz);
+		}
+    printf("\nTEMPO TRASCORSO %f \n",endTime - startTime);
+}
+/* shut down MPI */
+MPI_Type_free(&myStruct);    //Viene liberata la memoria allocata per il datatype creato
+//Vengono deallocati i puntatori
+free(buf);
+free(countSend);
+free(startRange);
+MPI_Finalize();
+return 0;
+```
+
