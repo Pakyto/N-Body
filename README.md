@@ -53,6 +53,8 @@ L'n-body solver sviluppato, è in grado di distribuire in maniera equa ai vari p
 - `Body *p = (Body*)buf;`  variabile di tipo Body  di ogni processore che punta agli elementi dell'array buf
   
 
+
+
 ##### Algoritmo:
 
 L'algoritmo per il calcolo dei valori delle particelle da parte dei processori, è diviso in diverse fasi:
@@ -121,7 +123,7 @@ resto = nBodies % (nproc);
 portion = nBodies/(nproc);
 ```
 
-Fatto ciò, ogni processore calcola qual è la propria porzione di particelle che deve calcolare e la porzione che deve essere assegnata ad ogni processore, poiché ogni processore attraverso l'utilizzo della ***MPI_Allgatherv*** , deve conoscere qual è la porzione assegnata ad ogni processore, ciò viene effettuato attraverso gli array di puntatori countSend e startRange. Il calcolo della porzione viene effettuato considerando il resto della divisione tra il numero di particelle e il numero di processori:
+Fatto ciò, ogni processore calcola qual è la propria porzione di particelle che deve calcolare, e la porzione che deve essere assegnata ad ogni processore, poiché ogni processore attraverso l'utilizzo della ***MPI_Allgatherv*** , deve conoscere qual è la porzione assegnata di tutti i processori. Il calcolo della porzione viene effettuato considerando il resto della divisione tra il numero di particelle e il numero di processori:
 
 - se il resto > 0, allora l' i-esimo processore avrà come porzione la "porzione assegnata + 1" e decrementa di 1 il valore del resto
 
@@ -141,5 +143,67 @@ for(int i = 0; i < nproc; i++){
 
 
 
-- Il processo MASTER inizializza in maniera casuale la posizione e la velocità di ogni particella. Attraverso la funzione ***MPI_Bcast***, comunica a tutti i processori i valori delle particelle
+**INIZIALIZZAZIONE PARTICELLE**
+
+Il processo MASTER inizializza in maniera casuale la posizione e la velocità di ogni particella. Attraverso la funzione ***MPI_Bcast***, comunica a tutti i processori i valori delle particelle 
+
+```c
+if(my_rank == 0){					
+    randomizeBodies(buf, 6*nBodies); 
+}
+MPI_Bcast(buf,bytes,MPI_FLOAT,0,MPI_COMM_WORLD); 
+```
+
+**Funzione randomizeBodies**: genera casualmente la posizione e la velocità per ogni particella, memorizzando i valori nell'array di float 
+
+```c
+void randomizeBodies(float *data, int n) {  
+	for (int i = 0; i < n; i++) {							
+		data[i] = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;   
+	}
+}
+```
+
+
+
+**SIMULAZIONE**
+
+Prima di iniziare la simulazione, ogni processore ha un puntatore di tipo Body che punta all'array dei valori delle particelle conosce i valori di tutte le particelle, in questo modo tutti processori conoscono tutti i valori delle particelle
+`Body *p = (Body*)buf;	 `
+
+Dopodiché, la simulazione inizia con il calcolo delle velocità della porzione delle particelle assegnata ad ogni processore. Ogni processore chiama la funzione *bodyForce*, passando le particelle(attraverso il puntatore Body), il tempo per l'iterazione (dt = 0.01), il numero di particelle che deve considerare e l'indice di inizio all'interno dell'insieme delle particelle
+
+```c
+void bodyForce(Body *p, float dt, int n, int startRange, int numBodies) {
+    for (int i = startRange; i < startRange + n; i++) {         
+        float Fx = 0.0f;				   
+        float Fy = 0.0f;
+        float Fz = 0.0f;
+        for (int j = 0; j < numBodies; j++) {      
+			float dx = p[j].x - p[i].x;
+			float dy = p[j].y - p[i].y;
+			float dz = p[j].z - p[i].z;
+			float distSqr = dx*dx + dy*dy + dz*dz + SOFTENING;  
+			float invDist = 1.0f / sqrtf(distSqr);         
+			float invDist3 = invDist * invDist * invDist;   
+			Fx += dx * invDist3;   
+			Fy += dy * invDist3;
+			Fz += dz * invDist3;
+		}
+		p[i].vx += dt*Fx;
+		p[i].vy += dt*Fy;
+		p[i].vz += dt*Fz;
+	}
+}
+```
+
+Successivamente, ogni processore calcola la posizione della porzione delle particelle:
+
+```c
+for (int i = startRange[my_rank] ; i < startRange[my_rank] + countSend[my_rank]; i++) {
+    p[i].x += p[i].vx*dt;
+    p[i].y += p[i].vy*dt;
+    p[i].z += p[i].vz*dt;
+}
+```
 
