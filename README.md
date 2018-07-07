@@ -169,6 +169,7 @@ void randomizeBodies(float *data, int n) {
 **Simulazione**
 
 Prima di iniziare la simulazione, ogni processore ha un puntatore di tipo Body che punta all'array dei valori delle particelle conosce i valori di tutte le particelle, in questo modo tutti processori conoscono tutti i valori delle particelle
+
 `Body *p = (Body*)buf;	 `
 
 Dopodiché, la simulazione inizia con il calcolo delle velocità della porzione delle particelle assegnata ad ogni processore. Ogni processore chiama la funzione *bodyForce*, passando le particelle(attraverso il puntatore Body), il tempo per l'iterazione (dt = 0.01), il numero di particelle che deve considerare e l'indice di inizio all'interno dell'insieme delle particelle
