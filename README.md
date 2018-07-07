@@ -58,6 +58,7 @@ L'n-body solver sviluppato, è in grado di distribuire in maniera equa ai vari p
 L'algoritmo per il calcolo dei valori delle particelle da parte dei processori, è diviso in diverse fasi:
 
 **AVVIO MPI**
+
 Viene avviato MPI e vengono presi i parametri passati da linea di comando
 
 ```c
@@ -90,6 +91,7 @@ startRange = malloc (sizeof(int)*nproc);
 
 
 **CREAZIONE DATATYPE**
+
 C'è stata la necessità della creazione di un Datatype poiché tale struttura deve essere trasferita a tutti i processori attraverso MPI, quindi è stato definito il layout del Datatype contenente i campi per la struttura Body. 
 
 ```c
@@ -111,6 +113,7 @@ MPI_Type_commit(&myStruct);
 
 
 **CALCOLO PORZIONE PER OGNI PROCESSORE**
+
 Inizialmente viene prima calcolato il resto e la porzione da assegnare ad ogni processore
 
 ```c
