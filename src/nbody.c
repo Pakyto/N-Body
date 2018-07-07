@@ -23,10 +23,7 @@ typedef struct { 				//STRUTTURA BODY
 void randomizeBodies(float *data, int n) {  //La funzione prende in input un array di float e il numero di bodies
 	for (int i = 0; i < n; i++) {							//Per n body, si calcolano i valori dei bodies
 		data[i] = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;   //Allocazione degli elementi dell'array con valori casuali
-		//data[i] = 1;
 	}
-	//printf("USCITA randomizeBodies \n");
-
 }
 
 /**Funzione bodyForce, prende come paramentri:
@@ -130,9 +127,7 @@ int main(int argc, char* argv[]){
 	Body *p = (Body*)buf;					      //Puntatore elemento Body che contiene l'array buf
 
 	resto = nBodies % (nproc);
-	//printf("RESTO %d \n",resto);
 	portion = nBodies/(nproc);
-	//printf("PORTION %d \n\n",portion);
 
 	/**Calcolo del resto da parte di tutti i processori:
 	 * ogni processore conosce qual è la porzione degli altri processori
@@ -145,13 +140,9 @@ int main(int argc, char* argv[]){
 			countSend[i] = countSend[i] + 1;
 			resto--;
 		}
-		//printf("COUNTSEND pos %d %d \n",i,countSend[i]);
 
 		startRange[i] = count;
-		//printf("startRange %d \n",startRange[i]);
-
 		count = count + countSend[i];
-		//printf("COUNT %d \n\n",count);
 
 	}
 
@@ -160,26 +151,9 @@ int main(int argc, char* argv[]){
 		randomizeBodies(buf, 6*nBodies); //Inizializzazione attraverso l'array di float buf
 	}
 
-	//printf("BARRIER PRIMA BCAST \n");
 	MPI_Bcast(buf,bytes,MPI_FLOAT,0,MPI_COMM_WORLD);    //Viene inviato a tutti i processori l'array inizializzato
 
-
-
-	//MPI_Scatterv(buf,countSend,startRange,MPI_FLOAT,recvbuf,countSend[my_rank],MPI_FLOAT,0,MPI_COMM_WORLD);
-
-
-
 	startTime = MPI_Wtime();
-
-
-	/*
-	Body *bodies = (Body*)buf;
-
-	for (int i = startRange[my_rank]; i < startRange[my_rank]+countSend[my_rank]; i++) {
-		printf("RANK %d BODIES %0.3f %0.3f %0.3f  \n",my_rank, bodies[i].x, bodies[i].y, bodies[i].z);
-	}*/
-
-
 
 	for (int iter = 1; iter <= nIters; iter++) {              //INIZIO SIMULAZIONE
 
@@ -196,12 +170,6 @@ int main(int argc, char* argv[]){
 			p[i].z += p[i].vz*dt;
 		}
 
-		/*
-		printf("PRIMA ALLGATHER \n");
-		for (int i = 0; i < nBodies; i++) {
-			printf("RANK %d BODIES n %d %0.3f %0.3f %0.3f  \n",my_rank,i, p[i].x, p[i].y, p[i].z);
-		}*(
-
 		//Viene inviata a tutti i processori la porzione di bodies modificati da ogni processore, ogni processore conosce le posizioni e la forze dei bodies calcolate dagli altri proce
 		/**
 		 * Vengono utilizzati i puntatori countSend e startRange, perché ogni processore conosce qual è la porzione assegnata agli altri processori
@@ -209,12 +177,6 @@ int main(int argc, char* argv[]){
 		 * In questo modo ogni processore conosce le posizioni e le forze dei bodies calcolati dagli altri processori
 		 */
 		MPI_Allgatherv(MPI_IN_PLACE,0,myStruct,p,countSend,startRange,myStruct,MPI_COMM_WORLD);
-
-		/*
-		printf("DOPO ALLGATHER \n");
-		for (int i = 0; i < nBodies; i++) {
-			printf("RANK %d BODIES n.%d %0.3f %0.3f %0.3f  \n",my_rank,i, p[i].x, p[i].y, p[i].z);
-		}*/
 
 	}
 
