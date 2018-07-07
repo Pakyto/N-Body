@@ -135,7 +135,7 @@ int main(int argc, char* argv[]){
 
 	for(int i = 0; i < nproc; i++){
 		countSend[i] = portion;
-		//printf("RESTO FOR %d \n",resto);
+
 		if(resto > 0){						 //Se il resto è maggiore di 0, i primi processori avranno un Body in più
 			countSend[i] = countSend[i] + 1;
 			resto--;
