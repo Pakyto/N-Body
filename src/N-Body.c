@@ -4,7 +4,7 @@
  Author      : Pasquale Settembre
  Version     :
  Copyright   : Your copyright notice
- Description : Hello MPI World in C
+ Description : N-body solver in C
  ============================================================================
  */
 #include <math.h>
