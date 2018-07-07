@@ -207,3 +207,12 @@ for (int i = startRange[my_rank] ; i < startRange[my_rank] + countSend[my_rank];
 }
 ```
 
+**Comunicazione tra i processori**: dato che ogni processore ha bisogno della posizione e della velocità di ogni particella, è stata utilizzata la funzione *MPI_Allgatherv* che permette ad ogni processore di ricevere le porzioni di particelle calcolate dagli altri processori, e inviare la porzione di particelle calcolate dall'i-esimo processore a tutti gli altri processori. In questo modo ogni processore avrà i valori di tutte le particelle calcolate dai vari processori
+
+```c
+	MPI_Allgatherv(MPI_IN_PLACE,0,myStruct,p,countSend,startRange,myStruct,MPI_COMM_WORLD);
+```
+
+La funzione Allgatherv prende come parametri:
+
+- *MPI_IN_PLACE* : in questo caso viene utilizzata questa variabile poiché il buffer di input è lo stesso di quello di output
