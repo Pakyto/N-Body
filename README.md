@@ -145,7 +145,7 @@ for(int i = 0; i < nproc; i++){
 
 **Inizializzazione particelle**
 
-Il processore MASTER inizializza in maniera casuale la posizione e la velocità di ogni particella. Attraverso la funzione ***MPI_Bcast***, comunica a tutti i processori i valori delle particelle 
+Il processore MASTER inizializza in maniera casuale la posizione e la velocità di ogni particella. Attraverso la funzione ***MPI_Bcast***, viene comunicato a tutti i processori il buffer contenente i valori inizializzati dal MASTER
 
 ```c
 if(my_rank == 0){					
@@ -244,4 +244,26 @@ free(startRange);
 MPI_Finalize();
 return 0;
 ```
+
+
+
+### Compilazione del sorgente
+
+Il programma deve essere compilato eseguendo il comando:
+
+`mpicc nbody.c -lm -o nbody`
+
+Nel caso in cui la compilazione restituisce un errore contenente "note: use option -std=c99", eseguire l'istruzione:
+
+`mpicc nbody.c -lm -std=c99 -o nbody`
+
+
+
+### Esecuzione del programma
+
+```c
+mpirun -np <numero processori> -host <lista indirizzi ip delle macchine del cluster> nbody <numero particelle> <numero iterazioni>
+```
+
+
 
