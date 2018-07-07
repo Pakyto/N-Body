@@ -229,9 +229,9 @@ Una volta terminati tutti i passi di simulazione, attraverso l'utilizzo della fu
 
 ```c
 if(my_rank == 0){
-		for(int i=0; i < nBodies; i++){
-			printf("BODY n: %d X:%0.3f Y:%0.3f Z:%0.3f VX:%0.3f VY:%0.3f VZ:%0.3f \n",i,p[i].x,p[i].y,p[i].z,p[i].vx,p[i].vy,p[i].vz);
-		}
+    for(int i=0; i < nBodies; i++){
+        printf("BODY n: %d X:%0.3f Y:%0.3f Z:%0.3f VX:%0.3f VY:%0.3f VZ:%0.3f \n",i,p[i].x,p[i].y,p[i].z,p[i].vx,p[i].vy,p[i].vz);
+    }
     printf("\nTEMPO TRASCORSO %f \n",endTime - startTime);
 }
 /* shut down MPI */
