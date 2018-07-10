@@ -258,7 +258,7 @@ I test sono stati effettuati sulle istanze m4.xlarge (4 core) di Amazon Web Serv
 
 ### Strong scaling
 
-Per il testing Strong scaling, i dati di input sono stati 20.000 particelle e 10 iterazioni. Di seguito viene riportata sottoforma tabellare i tempi di esecuzione dei test:
+Per il testing Strong scaling, sono state utilizzate 20.000 particelle e 20 iterazioni. Di seguito viene riportata sotto forma tabellare i tempi di esecuzione dei test:
 
 | N. processori | Tempo in millisecondi |
 | :------------ | :-------------------- |
@@ -273,7 +273,9 @@ Per il testing Strong scaling, i dati di input sono stati 20.000 particelle e 10
 
 Di seguito il grafico dei test:
 
-![Strong scaling](img/strongScaling.png)
+![StrongScaling](img/strongscaling.png)
+
+Come si vede dal grafico il tempo di esecuzione diminuisce al crescere del numero di processori, ma c'è un peggioramento del tempo di esecuzione quando si utilizzano 20, 24 e 28 processori, mentre con 32 processori si ha il minor tempo di esecuzione rilevato.
 
 ### Compilazione del sorgente
 
