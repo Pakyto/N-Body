@@ -273,7 +273,7 @@ Per il testing Strong scaling, i dati di input sono stati 20.000 particelle e 10
 
 Di seguito il grafico dei test:
 
-![Strong scaling](img\strongScaling.png)
+![Strong scaling](img/strongScaling.png)
 
 ### Compilazione del sorgente
 
