@@ -247,6 +247,34 @@ return 0;
 
 
 
+### Testing
+
+I test sono stati effettuati sulle istanze m4.xlarge (4 core) di Amazon Web Services. I test sono stati effettuati 3 volte, dopodiché è stata calcolata la media dei valori risultanti nei 3 test. Il tempo di esecuzione è stato calcolato dall'inizio della simulazione fino alla stampa dei valori finali delle particelle da parte del processore master
+
+**Risorse massime utilizzate:**
+
+- 8 istanze EC2 m4.xlarge con *ami-52a0c53b* 
+- 32 processori (4 core per ogni singola istanza)
+
+### Strong scaling
+
+Per il testing Strong scaling, i dati di input sono stati 20.000 particelle e 10 iterazioni. Di seguito viene riportata sottoforma tabellare i tempi di esecuzione dei test:
+
+| N. processori | Tempo in millisecondi |
+| :------------ | :-------------------- |
+| 4             | 34113,42              |
+| 8             | 17138,13              |
+| 12            | 11498,72              |
+| 16            | 8648,56               |
+| 20            | 12459,90              |
+| 24            | 10510,76              |
+| 28            | 8997,88               |
+| 32            | 7971,43               |
+
+Di seguito il grafico dei test:
+
+![Strong scaling](img\strongScaling.png)
+
 ### Compilazione del sorgente
 
 Il programma deve essere compilato eseguendo il comando:
