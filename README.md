@@ -247,7 +247,7 @@ return 0;
 
 
 
-### Testing
+## Testing
 
 I test sono stati effettuati sulle istanze m4.xlarge (4 core) di Amazon Web Services. I test sono stati effettuati 3 volte, dopodiché è stata calcolata la media dei valori risultanti nei 3 test. Il tempo di esecuzione è stato misurato dall'inizio della simulazione fino alla stampa dei valori finali delle particelle da parte del processore master
 
@@ -256,9 +256,9 @@ I test sono stati effettuati sulle istanze m4.xlarge (4 core) di Amazon Web Serv
 - 8 istanze EC2 m4.xlarge con *ami-52a0c53b* 
 - 32 processori (4 core per ogni singola istanza)
 
-### Strong Scaling
+#### Strong Scaling
 
-Per il testing Strong scaling, sono state utilizzate 20.000 particelle e 20 iterazioni. Di seguito viene riportata sotto forma tabellare i tempi di esecuzione dei test:
+Per il testing Strong scaling, sono state utilizzate 20.000 particelle e 20 iterazioni. Di seguito viene riportato sotto forma tabellare i tempi di esecuzione dei test:
 
 | N.processori | Tempo in millisecondi |
 | :----------- | :-------------------- |
@@ -271,15 +271,15 @@ Per il testing Strong scaling, sono state utilizzate 20.000 particelle e 20 iter
 | 28           | 8997,88               |
 | 32           | 7971,43               |
 
-Di seguito il grafico dei test:
+Di seguito il grafico:
 
-![StrongScaling](img/strongscaling.png)
+![StrongScaling](img/strong.png)
 
 Come si vede dal grafico il tempo di esecuzione diminuisce al crescere del numero di processori, ma c'è un peggioramento del tempo di esecuzione quando si utilizzano 20, 24 e 28 processori, mentre con 32 processori si ha il minor tempo di esecuzione rilevato.
 
-### Weak Scaling
+#### Weak Scaling
 
-Nel testing weak scaling la dimensione dell'input deve crescere in base al numero di processori, quindi si è scelto di definire il numero di particelle in base al numero di processori,  cioè il numero di particelle 2000 per il numero di processori p (2000*p), mentre il numero di iterazioni è fissato a 20. Di seguito viene riportata sotto forma tabellare i tempi di esecuzione dei test:
+Nel testing weak scaling la dimensione dell'input deve crescere in base al numero di processori, quindi si è scelto di definire il numero di particelle in base al numero di processori,  cioè il numero di particelle 2000 per il numero di processori p (2000*p), mentre il numero di iterazioni è fissato a 20. Di seguito viene riportato sotto forma tabellare i tempi di esecuzione dei test:
 
 | N.particelle | N.processori | Tempo in millisecondi |
 | ------------ | ------------ | --------------------- |
@@ -292,7 +292,11 @@ Nel testing weak scaling la dimensione dell'input deve crescere in base al numer
 | 56000        | 28           | 69816,78              |
 | 64000        | 32           | 82120,48              |
 
+Di seguito il grafico:
 
+![WeakScaling](img/weak.png)
+
+Come ci aspettavamo, il tempo di esecuzione del programma al crescere dell'input e del numero di processori, ha una crescita lineare. Si può notare un notevole aumento del tempo di esecuzione dall'utilizzo di 20 processori, ciò può essere dovuto all'overhead di comunicazione tra i processori.
 
 ### Compilazione del sorgente
 
@@ -300,7 +304,7 @@ Il programma deve essere compilato eseguendo il comando:
 
 `mpicc nbody.c -lm -o nbody`
 
-Nel caso in cui la compilazione restituisce un errore contenente "note: use option -std=c99", eseguire l'istruzione:
+Nel caso in cui la compilazione restituisce un errore contenente "note: use option -std=c99", eseguire il comando:
 
 `mpicc nbody.c -lm -std=c99 -o nbody`
 
