@@ -262,6 +262,7 @@ Per il testing Strong scaling, sono state utilizzate 20.000 particelle e 20 iter
 
 | N.processori | Tempo in millisecondi |
 | :----------- | :-------------------- |
+| 2            | 68142,73              |
 | 4            | 34113,42              |
 | 8            | 17138,13              |
 | 12           | 11498,72              |
@@ -273,9 +274,9 @@ Per il testing Strong scaling, sono state utilizzate 20.000 particelle e 20 iter
 
 Di seguito il grafico:
 
-![StrongScaling](img/strong.png)
+![StrongScaling](img/Strong.png)
 
-Come si vede dal grafico il tempo di esecuzione diminuisce al crescere del numero di processori, ma c'è un peggioramento del tempo di esecuzione quando si utilizzano 20, 24 e 28 processori, mentre con 32 processori si ha il minor tempo di esecuzione rilevato.
+Come si vede dal grafico il tempo di esecuzione diminuisce al crescere del numero di processori, ma c'è un lieve peggioramento del tempo di esecuzione quando si utilizzano 20, 24 e 28 processori, ciò può essere dovuto dall'overhead di comunicazione, mentre con 32 processori si ha il minor tempo di esecuzione rilevato.
 
 #### Weak Scaling
 
@@ -283,6 +284,7 @@ Nel testing weak scaling la dimensione dell'input deve crescere in base al numer
 
 | N.particelle | N.processori | Tempo in millisecondi |
 | ------------ | ------------ | --------------------- |
+| 4000         | 2            | 2740,32               |
 | 8000         | 4            | 5489,19               |
 | 16000        | 8            | 10990,47              |
 | 24000        | 12           | 16525,41              |
@@ -294,9 +296,9 @@ Nel testing weak scaling la dimensione dell'input deve crescere in base al numer
 
 Di seguito il grafico:
 
-![WeakScaling](img/weak.png)
+![WeakScaling](img/Weak.png)
 
-Come ci aspettavamo, il tempo di esecuzione del programma al crescere dell'input e del numero di processori, ha una crescita lineare. Si può notare un notevole aumento del tempo di esecuzione dall'utilizzo di 20 processori, ciò può essere dovuto all'overhead di comunicazione tra i processori.
+Come ci aspettavamo, il tempo di esecuzione del programma al crescere dell'input e del numero di processori, ha una crescita lineare. Si può notare un notevole aumento del tempo di esecuzione dall'utilizzo di 20 processori, ciò può essere dovuto dall'overhead di comunicazione tra i processori.
 
 ### Compilazione del sorgente
 
