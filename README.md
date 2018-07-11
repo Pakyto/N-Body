@@ -125,9 +125,9 @@ portion = nBodies/(nproc);
 
 Fatto ciò, ogni processore calcola qual è la propria porzione di particelle che deve calcolare, e la porzione che deve essere assegnata ad ogni processore, poiché ogni processore attraverso l'utilizzo della ***MPI_Allgatherv*** , deve conoscere qual è la porzione assegnata di tutti i processori. Il calcolo della porzione viene effettuato considerando il resto della divisione tra il numero di particelle e il numero di processori:
 
-- se il resto > 0, allora l' i-esimo processore avrà come porzione la "porzione assegnata + 1" e decrementa di 1 il valore del resto
+- se il resto > 0, allora l' i-esimo processore avrà come porzione "portion + 1" e decrementa di 1 il valore del resto
 
-In questo modo i primi processori avranno da calcolare una particella in più rispetto alla porzione di particelle assegnata. Successivamente, ogni processore calcola l'indice di inizio della porzione di particelle da calcolare. 
+In questo modo i processori con resto > 0, avranno da calcolare una particella in più rispetto alla porzione di particelle. Successivamente, ogni processore calcola l'indice di inizio all'interno della porzione di particelle da calcolare. 
 
 ```c
 for(int i = 0; i < nproc; i++){
@@ -168,7 +168,7 @@ void randomizeBodies(float *data, int n) {
 
 **Simulazione**
 
-Prima di iniziare la simulazione, ogni processore ha un puntatore di tipo Body che punta all'array dei valori delle particelle conosce i valori di tutte le particelle, in questo modo tutti processori conoscono tutti i valori delle particelle
+Prima di iniziare la simulazione, ogni processore ha un puntatore di tipo Body che punta all'array dei valori delle particelle, in questo modo tutti processori conoscono tutti i valori delle particelle
 
 `Body *p = (Body*)buf;	 `
 
@@ -208,7 +208,7 @@ for (int i = startRange[my_rank] ; i < startRange[my_rank] + countSend[my_rank];
 }
 ```
 
-**Comunicazione tra i processori**: dato che ogni processore ha bisogno della posizione e della velocità di ogni particella, è stata utilizzata la funzione *MPI_Allgatherv* che permette ad ogni processore di ricevere le porzioni di particelle calcolate dagli altri processori, e inviare la porzione di particelle calcolate dall'i-esimo processore a tutti gli altri processori. In questo modo ogni processore avrà i valori di tutte le particelle calcolate dai vari processori. 
+**Comunicazione tra i processori**: dato che ogni processore ha bisogno della posizione e della velocità di ogni particella, è stata utilizzata la funzione *MPI_Allgatherv* che permette ad ogni processore di ricevere le porzioni di particelle calcolate dagli altri processori, e inviare la porzione di particelle calcolata dall'i-esimo processore a tutti gli altri processori. In questo modo ogni processore avrà i valori aggiornati di tutte le particelle calcolati da ogni processore. 
 
 ```c
 	MPI_Allgatherv(MPI_IN_PLACE,0,myStruct,p,countSend,startRange,myStruct,MPI_COMM_WORLD);
@@ -216,7 +216,7 @@ for (int i = startRange[my_rank] ; i < startRange[my_rank] + countSend[my_rank];
 
 La funzione Allgatherv prende come parametri:
 
-- *MPI_IN_PLACE* : in questo caso viene utilizzata questa variabile poiché il buffer di input è lo stesso di quello di output; ogni processore inserisce i valori delle particelle calcolate nel buffer di ricezione
+- *MPI_IN_PLACE* : in questo caso viene utilizzata questa variabile poiché il buffer di input è lo stesso di quello di output; ogni processore inserisce i valori delle particelle calcolate nel relativo buffer di ricezione
 - *myStruct*: rappresenta il datatype creato per la struttura Body
 - *p*: rappresenta il buffer di ricezione dove verranno memorizzati valori delle particelle di ogni processore
 - *countSend:* rappresenta la porzione di particelle di ogni processore, indica quante particelle ci sono nel buffer di ricezione per ogni processore
