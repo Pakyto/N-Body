@@ -269,7 +269,7 @@ Per il testing Strong scaling, sono state utilizzate 20.000 particelle e 20 iter
 | 16           | 8648,56               |
 | 20           | 12459,90              |
 | 24           | 10510,76              |
-| 28           | 8997,88               |
+| 28           | 9019,66               |
 | 32           | 7971,43               |
 
 Di seguito il grafico:
@@ -300,7 +300,32 @@ Di seguito il grafico:
 
 Come ci aspettavamo, il tempo di esecuzione del programma al crescere dell'input e del numero di processori, ha una crescita lineare. Si può notare un notevole aumento del tempo di esecuzione dall'utilizzo di 20 processori, ciò può essere dovuto dall'overhead di comunicazione tra i processori.
 
-### Compilazione del sorgente
+#### Fattori di scalabilità
+
+Sono stati calcolati i fattori di efficienza per Strong Scaling e Weak Scaling. Per Strong Scaling è stata utilizzata la formula:
+
+` t1 / ( N * tN ) * 100%  `
+
+Mentre per Weak Scaling è stata utilizzata la formula:
+
+` ( t1 / tN ) * 100%  `
+
+Le variabili nelle formule indicano:
+
+- t1: tempo di esecuzione del programma con 1 processore
+- N: rappresenta il numero di processori utilizzati
+- tN: tempo di esecuzione del programma utilizzando N processori
+
+Di seguito vengono riportati i fattori di scalabilità per Strong e Weak scaling:
+
+|                | 2     | 4     | 8     | 12    | 16    | 20    | 24    | 28    | 32    |
+| :------------: | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| Strong Scaling | 0,999 | 0,998 | 0,993 | 0,987 | 0,984 | 0,546 | 0,540 | 0,539 | 0,534 |
+|  Weak Scaling  | 0,498 | 0,249 | 0,124 | 0,083 | 0,062 | 0,028 | 0,023 | 0,020 | 0,017 |
+
+
+
+## Compilazione del sorgente
 
 Il programma deve essere compilato eseguendo il comando:
 
@@ -312,7 +337,7 @@ Nel caso in cui la compilazione restituisce un errore contenente "note: use opti
 
 
 
-### Esecuzione del programma
+## Esecuzione del programma
 
 ```c
 mpirun -np <numero processori> -host <lista indirizzi ip delle macchine del cluster> nbody <numero particelle> <numero iterazioni>
