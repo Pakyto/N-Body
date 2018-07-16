@@ -55,7 +55,7 @@ L'n-body solver sviluppato, è in grado di distribuire in maniera equa ai vari p
 
 
 
-##### ALGORITMO:
+#### ALGORITMO:
 
 L'algoritmo per il calcolo dei valori delle particelle da parte dei processori, è diviso in diverse fasi:
 
@@ -94,7 +94,7 @@ startRange = malloc (sizeof(int)*nproc);
 
 **Creazione datatype**
 
-C'è stata la necessità della creazione di un Datatype poiché tale struttura deve essere trasferita a tutti i processori attraverso MPI, quindi è stato definito il layout del Datatype contenente i campi per la struttura Body. 
+C'è stata la necessità della creazione di un Datatype poiché la struttura Body deve essere trasferita a tutti i processori attraverso MPI, quindi è stato definito il layout del Datatype contenente i campi per la struttura Body. 
 
 ```c
 const int numitem=6;
